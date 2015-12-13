@@ -69,10 +69,17 @@ public:
   void utility();
 
   void return_min(State * E_, vector<InspectEvent> &v, set<int> &ts);
-  void utility_loop(State *E, State * E_,InspectEvent &p, InspectEvent *event_at_E_);
-  void loopmain(State *E, InspectEvent &p);
-  void SDPOR();
+  void backtrack_SourceDPOR_helper(State *E, State * E_,InspectEvent &p, InspectEvent *event_at_E_);
+  void update_backtrack_SourceDPOR(State *E, InspectEvent &p);
+  void SourceDPOR();
+
+  void backtrack_context_bound_SourceDPOR_helper(State *E, State * E_,InspectEvent &p, InspectEvent *event_at_E_);
+  void update_backtrack_context_bound_SourceDPOR(State *E, InspectEvent &p);
+  void context_bound_SourceDPOR();
+
   void backtrack_checking();
+  void StatefulDPOR();
+  bool check_state_exists_in_hash(State* state);
 //   void monitor();
   State * execute_one_thread_until(State * state, int tid, InspectEvent);
   //State * next_state(State *state, InspectEvent &event, LocalStateTable * ls_table);

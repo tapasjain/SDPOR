@@ -19,6 +19,7 @@ State::State()
   : prev(NULL), next(NULL)    
 { 
   prog_state = new ProgramState();
+  context_switches = 0;
 }
 
 
@@ -31,6 +32,8 @@ State::State(State &another)
   backtrack = another.backtrack;
   done = another.done;
   sleepset = another.sleepset;
+
+  context_switches = another.context_switches;
 
   sel_event = prog_state->enabled.get_transition(another.sel_event.thread_id);
   clock_vectors = another.clock_vectors;
@@ -53,6 +56,8 @@ State & State::operator = (State& another)
   backtrack = another.backtrack;
   done = another.done;
   sleepset = another.sleepset;
+
+  context_switches = another.context_switches;
 
   if (another.sel_event.valid())
     sel_event = prog_state->enabled.get_transition(another.sel_event.thread_id);
@@ -277,6 +282,15 @@ bool State::is_enabled_empty()
   return  prog_state->enabled.empty();
 }
 
+bool State::change_preemption_bound(InspectEvent &event) {
+	if(prev != NULL) {
+		int id1 = prev->sel_event.thread_id;
+		InspectEvent alt_event = prog_state->enabled.get_transition(id1);
+		if(id1 != event.thread_id && alt_event.valid()) return true;
+	}
+	return false;
+}
+
 /**
  *  get the new state by executing the event 
  */
@@ -295,6 +309,11 @@ State * State::apply(InspectEvent &event)
   new_state->sleepset = sleepset;
   new_state->locksets = locksets;  
   new_state->clock_vectors = clock_vectors;
+
+  new_state->context_switches = context_switches;
+
+  if(change_preemption_bound(event)) new_state->context_switches++;
+
   clock_vector = new_state->clock_vectors.get_clock_vector(event.thread_id);  
   assert(clock_vector != NULL);
   clock_vector->timestamps[event.thread_id]++;
@@ -453,6 +472,9 @@ string State::toString()
     ss << "            " << it->second.toString() << "\n";
 
   ss << "-----------------------------------\n";
+
+  ss << "		context switches:	";
+  ss << context_switches << "\n";
 
   return ss.str();
 }

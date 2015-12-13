@@ -55,6 +55,8 @@ public:
 
   bool alive(int tid);
   
+  bool change_preemption_bound(InspectEvent &event);
+
   InspectEvent get_transition();
 
   void execute(InspectEvent &event);
@@ -106,6 +108,8 @@ public:
   
   InspectEvent sel_event;
   bool bkinfo_computed_flag;  // the backtrack info has been computed
+
+  int context_switches;
 						
   State * prev;
   State * next;  
