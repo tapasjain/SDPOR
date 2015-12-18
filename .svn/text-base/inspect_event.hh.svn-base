@@ -1,0 +1,217 @@
+#ifndef __INSPECTOR__EVENT_HH__
+#define __INSPECTOR__EVENT_HH__
+
+#include <string> 
+#include <cassert>
+#include <set>
+#include <iostream>
+#include "inspect_util.hh"
+
+
+using std::string;
+using std::set;
+using std::istream;
+using std::ostream;
+
+
+#define DEF_EVENT_CODE(EV, STR, EV_PERM, CAT)   EV,
+enum EventType{
+  #include "inspect_event.def"
+  UNKNOWN
+};
+#undef DEF_EVENT_CODE
+
+
+#define DEF_EVENT_CODE(EV, STR, EV_PERM, CAT)   EV_PERM,
+enum EventPermitType{
+  #include "inspect_event.def"
+  UNKNOWN_PERM
+};
+#undef DEF_EVENT_CODE 
+
+
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+  extern const int DummyLocation;
+
+#ifdef __cplusplus
+}
+#endif
+
+
+string event_type_to_string(EventType);
+EventType string_to_event_type(string str);
+
+EventPermitType permit_type(EventType);
+
+enum EventCategory 
+{  
+  EC_MUTEX,    EC_COND,    EC_RWLOCK,
+  EC_OBJECT,   EC_THREAD,  EC_SEMAPHORE,
+  EC_SYMMETRY, EC_GLOBAL,  EC_LOCAL,   
+  EC_CAS,      EC_ERROR = 9999
+};				
+
+
+EventCategory  get_event_category(EventType  et);
+string  event_type_to_string(EventType et);
+
+
+
+Socket& operator << (Socket& sock, EventCategory ecls);
+Socket& operator >> (Socket& sock, EventCategory &ecls);
+
+Socket& operator << (Socket& sock, EventType type);
+Socket& operator >> (Socket& sock, EventType &type);
+
+Socket & operator << (Socket& sock, EventPermitType perm);
+Socket & operator >> (Socket& sock, EventPermitType & perm);
+
+istream & operator >>(istream &is, EventCategory &ecls);
+istream & operator >>(istream &is, EventType  &etype);
+
+ostream & operator <<(ostream &os, EventCategory ecls);
+ostream & operator <<(ostream &os, EventType  etype);
+
+
+/**
+ *  InspectEvent encaptures the information of communication events 
+ * 
+ *  the duplicate method will only duplicate threee fields: 
+ *    event_type, event_id, and thread_id, 
+ * 
+ *  the other fields will be handled according to the context
+ * 
+ */
+
+class InspectEvent
+{
+public:
+  InspectEvent();
+
+  void init();
+  
+  void init_mutex_init(int tid, int mid);
+  void init_mutex_destroy(int tid, int mid);
+  void init_mutex_lock(int tid, int mid);
+  void init_mutex_trylock(int tid, int mid);
+  void init_mutex_unlock(int tid, int mid);
+
+  void init_cond_init(int tid, int cid);
+  void init_cond_destroy(int tid, int cid);
+  void init_cond_wait(int tid, int cid, int mid);
+  void init_cond_signal(int tid, int cid);
+  void init_cond_broadcast(int tid, int cid);  
+  void init_cond_timedwait(int tid, int cid);
+
+  void init_cond_wait_lock(int tid, int cid, int mid);
+  void init_cond_wait_unlock(int tid, int cid, int mid);
+
+
+  void init_rwlock_init(int tid, int rwid);
+  void init_rwlock_destroy(int tid, int rwlid);
+  void init_rwlock_rdlock(int tid, int rwlid);
+  void init_rwlock_wrlock(int tid, int rwlid);
+  void init_rwlock_unlock(int tid, int rwlid);
+
+  void init_thread_start(int tid);
+  void init_thread_end(int tid);
+  void init_thread_create(int tid, int cid);
+  void init_thread_join(int tid, int cid);
+  void init_thread_pre_create(int tid);
+  void init_thread_post_create(int tid, int cid);
+
+  void init_state_capturing_thread_start(int tid);
+  void init_state_capturing_thread_pre_create(int tid);
+  void init_state_capturing_thread_post_create(int tid, int cid);
+
+
+  void init_obj_register(int tid, int oid);
+  void init_obj_read(int tid, int oid);
+  void init_obj_write(int tid, int oid);
+  
+  void init_symm_point(int tid, int ptno);
+  void init_state_req(int tid);
+  void init_state_ack(int tid);
+
+  void init_local_info(int tid, int pos, int flag);
+  void init_local_state_begin(int tid);
+  void init_local_state_end(int tid);
+  void init_local_int(int tid);
+  void init_local_double(int tid);
+  void init_local_binary(int tid);
+
+  void init_cas_instr(int tid, int oid);
+  void init_cas2_instr(int tid, int oid);
+  
+  bool may_have_side_effect() ; 
+  bool must_happen_before(InspectEvent * another);
+  bool is_concurrent_with(InspectEvent * another);
+  
+  EventCategory event_category(){ return get_event_category(type); }
+  
+  string toString();    
+  
+  void serialize(ostream & os);
+  void deserialize(istream & is);
+    
+  bool dependent(InspectEvent &event);
+  bool communicative(InspectEvent &event);
+  bool is_modification_by_const();
+
+  bool operator == (InspectEvent & event);
+  bool operator != (InspectEvent & event);
+
+  InspectEvent & operator =(InspectEvent ev2);
+
+  inline bool valid()   { return (type != UNKNOWN  && thread_id >= 0); } 
+  inline bool invalid() { return (type == UNKNOWN || thread_id < 0); } 
+  inline void clear() { this->init(); } 
+
+  bool can_disable(InspectEvent &event);
+  bool can_enable(InspectEvent &event);
+
+  bool semantic_equal(InspectEvent &event);
+
+public:
+  EventType type;     //  0. type
+  int thread_id;      //  1. the thread that initiate the event
+
+//   string thread_nm;   //  () name of the thread routine 
+
+  union{
+    int mutex_id;       //  mutex-related 
+    int rwlock_id;      //  rwlocks
+    int obj_id;         //  ordinary shared variables
+    int sem_id;         //  semaphores
+    void * thread_arg;  //  thread_argument
+    int point_no;       //  piont number of the symmetry point
+  };
+  
+  union{
+    int cond_id;        //  condition var related
+    int child_id;       //  create/join thread
+    int old_value;
+  };
+  
+  int location_id;    //  the location in the program 
+                      //  it is equivalent to the program counter 
+  bool local_state_changed_flag;    // . whether the local state changed after executing the 
+                                    //     last global transition
+
+public:
+  static InspectEvent  dummyEvent;
+};
+
+
+Socket& operator << (Socket& sock, InspectEvent &event);
+Socket& operator >> (Socket& sock, InspectEvent &event);
+
+#endif
+
+
+

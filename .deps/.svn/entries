@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wc-entries
+   xmlns="svn:">
+<entry
+   committed-rev="724"
+   name=""
+   committed-date="2007-10-03T00:50:36.808710Z"
+   url="svn://proof.cs.utah.edu:9999/projects/inspect-stateless/src/.deps"
+   last-author="yuyang"
+   kind="dir"
+   uuid="46051fe0-3c28-0410-8324-965b07d92cea"
+   revision="1767"/>
+</wc-entries>

@@ -70,6 +70,10 @@ State * next_state(State* state,
   new_state->clock_vectors = state->clock_vectors;
   new_state->update_clock_vector(event.thread_id);  // increase the clock counter of the correspondent thread by 1
 
+  new_state->context_switches = state->context_switches;
+
+  if(state->change_preemption_bound(event)) new_state->context_switches++;
+
   new_state->execute(event);
 
   if (! state->symmetry.has_member(event.thread_id)){
@@ -99,7 +103,7 @@ State * next_state(State* state,
   
   if (event.type == THREAD_END)  return new_state;
   
-  // here we need to handle multiple situtation here
+  // here we need to handle multiple situation here
   // need a better style 
   
   bool found_next_event = false;

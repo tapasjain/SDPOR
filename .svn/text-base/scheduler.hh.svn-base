@@ -5,7 +5,7 @@
 #include <vector>
 #include <set>
 #include <ext/hash_set>
-#include <utility>`
+#include <utility>
 
 #include "inspect_util.hh"
 #include "inspect_event.hh"
@@ -58,7 +58,6 @@ public:
   bool dependent(InspectEvent &e1, InspectEvent &e2);
   bool is_mutex_exclusive_locksets(Lockset *, Lockset*);
   void report();
-  void utility(State * state, InspectEvent &event);
 
   bool examine_state(State*, State*);
 public:
@@ -66,12 +65,6 @@ public:
   void exec_transition(InspectEvent &event);
 
   void monitor_first_run();
-  void utility();
-
-  void return_min(State * E_, vector<InspectEvent> &v, set<int> &ts);
-  void utility_loop(State *E, State * E_,InspectEvent &p, InspectEvent *event_at_E_);
-  void loopmain(State *E, InspectEvent &p);
-  void SDPOR();
   void backtrack_checking();
 //   void monitor();
   State * execute_one_thread_until(State * state, int tid, InspectEvent);

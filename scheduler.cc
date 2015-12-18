@@ -25,6 +25,7 @@ extern Scheduler* g_scheduler;
 extern int verboseLevel;
 
 const int CONTEXT_BOUND = 2;
+int broken_in_middle = 0;
 int reached = 0;
 int reaching = 0;
 
@@ -191,7 +192,7 @@ void Scheduler::run() {
 	cout << "Transitions explored: " << num_of_transitions << endl;
 	cout << "Total No of times backtrack updated " << inserted_in_backtrack
 			<< endl;
-	cout << "Reached " << reached << " " << "reaching "  << reaching << endl;
+	cout << "Reached " << reached << " " << "reaching " << reaching << endl;
 }
 
 void Scheduler::exec_transition(InspectEvent & event) {
@@ -458,7 +459,7 @@ void Scheduler::return_min(State * state, vector<InspectEvent> &w,
 }
 
 // tapas, vansh
-// This function find the nondependent set corresponding to event at E' & E (v = notdep(e,E)) & then calls the return_min function
+// This function find the non-dependent set corresponding to event at E' & E (v = notdep(e,E)) & then calls the return_min function
 // from the result it finds out if there is an event which is there in I(E', v) and also backtrack(E') then it doesn't do anything, 
 // else it adds any one event from I(E', v) to the backtrack(E')
 void Scheduler::backtrack_SourceDPOR_helper(State *E, State * old_state,
@@ -1041,13 +1042,14 @@ void Scheduler::backtrack_context_bound_SourceDPOR_helper(State *E,
 		inserted_in_backtrack++;
 
 		if (old_state->context_switches
-				< CONTEXT_BOUND|| old_state->prev == NULL) {
+				< CONTEXT_BOUND || old_state->prev == NULL) {
 			old_state->backtrack.insert(to_insert);
-		}
-		else if (old_state->prev != NULL) {
+		} 
+
+		if (old_state->prev != NULL) {
 			State* temp = old_state->prev;
 			while (temp->prev != NULL) {
-				if (temp->context_switches < CONTEXT_BOUND)
+				if (temp->sel_event.thread_id != temp->next->sel_event.thread_id)
 					break;
 				temp = temp->prev;
 			}
@@ -1072,13 +1074,18 @@ void Scheduler::backtrack_context_bound_SourceDPOR_helper(State *E,
 				cout << "I have reacheded here.\n";
 				reached++;
 				temp->backtrack.insert(to_insert);
-			} else {
+			}
+
+			else {
 				cout << "I do not want to reachikj here.\n";
-				for(TransitionSet::iterator it=temp->prog_state->enabled.events.begin(); it!=temp->prog_state->enabled.events.end(); ++it) {
-					if( temp->sleepset.has_member(it->second)
+				for (TransitionSet::iterator it =
+						temp->prog_state->enabled.events.begin();
+						it != temp->prog_state->enabled.events.end(); ++it) {
+					if (temp->sleepset.has_member(it->second)
 							|| temp->backtrack.has_member(it->second)
 							|| temp->done.has_member(it->second)
-							|| !(it->second.can_enable(temp->sel_event)))
+							// || !(it->second.can_enable(temp->sel_event))
+							)
 						continue;
 					temp->backtrack.insert(it->second);
 				}
@@ -1091,25 +1098,28 @@ void Scheduler::backtrack_context_bound_SourceDPOR_helper(State *E,
 void Scheduler::update_backtrack_context_bound_SourceDPOR(State *E,
 		InspectEvent &event) {
 	State *old_state = E->prev;
+
+	set<int> tid_done;
+
 	while (old_state != NULL) {
 		// checking happens before
 		if (event.thread_id != old_state->sel_event.thread_id
-				&& old_state->sel_event.dependent(event)) {
+				&& old_state->sel_event.dependent(event) && not tid_done.count(old_state->sel_event.thread_id)) {
 
 			State *new_state = old_state->next;
 			int incondition = 1;
-			while (new_state != E) {
-				if ((old_state->sel_event.dependent(new_state->sel_event)
-						|| old_state->sel_event.thread_id
-								== new_state->sel_event.thread_id)
-						&& (new_state->sel_event.dependent(event)
-								|| new_state->sel_event.thread_id
-										== event.thread_id)) {
-					incondition = 0;
-					break;
-				}
-				new_state = new_state->next;
-			}
+			// while (new_state != E) {
+			// 	if ((old_state->sel_event.dependent(new_state->sel_event)
+			// 			|| old_state->sel_event.thread_id
+			// 					== new_state->sel_event.thread_id)
+			// 			&& (new_state->sel_event.dependent(event)
+			// 					|| new_state->sel_event.thread_id
+			// 							== event.thread_id)) {
+			// 		incondition = 0;
+			// 		break;
+			// 	}
+			// 	new_state = new_state->next;
+			// }
 
 			// now to check if race can be reversed
 			if (incondition) {
@@ -1138,8 +1148,10 @@ void Scheduler::update_backtrack_context_bound_SourceDPOR(State *E,
 				vec2 = E->get_clock_vector(event.thread_id);
 
 				if (vec1->is_concurrent_with(*vec2)) {
+
 					backtrack_context_bound_SourceDPOR_helper(E, old_state,
 							event, &old_state->sel_event);
+					tid_done.insert(old_state->sel_event.thread_id);
 				}
 			}
 		}
@@ -1295,8 +1307,13 @@ void Scheduler::context_bound_SourceDPOR() {
 			return;
 		}
 		assert(current_state->is_enabled(event));
+
 		new_state = next_state(current_state, event, event_buffer);
 
+		if (new_state->context_switches > CONTEXT_BOUND) {
+			broken_in_middle++;
+			break;
+		}
 		assert(current_state->context_switches == new_state->context_switches);
 
 		num_of_transitions++;
@@ -1305,7 +1322,6 @@ void Scheduler::context_bound_SourceDPOR() {
 	}
 
 	//	cout << "******************Out of loop*****************" << endl;
-
 	//verbose(1, state_stack.toString2());
 	if (!current_state->prog_state->disabled.empty()
 			&& current_state->sleepset.empty()) {
