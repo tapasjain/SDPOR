@@ -100,6 +100,8 @@ public:
   TransitionSet backtrack;
   TransitionSet done;
   TransitionSet sleepset;
+
+  TransitionSet remove_from_sleep;
   
   Locksets  locksets;
   //Rwlocksets  rwlocksets;

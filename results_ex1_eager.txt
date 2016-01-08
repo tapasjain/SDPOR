@@ -1,0 +1,56 @@
+Example 1:
+
+Bound 0
+Total number of runs:  12,   killed-in-the-middle runs: 0
+broken_in_middle 0
+Less killed 0 equal_killed 0 greater_killed 0
+Transitions explored: 3454
+Total No of times backtrack updated 35
+Single_update_second 11
+update_via_enabled=backtrack 0
+single_update_first 0
+Used time (seconds): 0.879416
+
+Bound 1
+Total number of runs:  47,   killed-in-the-middle runs: 0
+broken_in_middle 0
+Less killed 0 equal_killed 0 greater_killed 0
+Transitions explored: 12423
+Total No of times backtrack updated 69
+Single_update_second 11
+update_via_enabled=backtrack 0
+single_update_first 35
+Used time (seconds): 2.915071
+
+Bound 2:
+Total number of runs:  81,   killed-in-the-middle runs: 0
+broken_in_middle 0
+Less killed 0 equal_killed 0 greater_killed 0
+Transitions explored: 18231
+Total No of times backtrack updated 80
+Single_update_second 11
+update_via_enabled=backtrack 0
+single_update_first 69
+Used time (seconds): 4.316162
+
+Bound 3
+Total number of runs:  92,   killed-in-the-middle runs: 0
+broken_in_middle 0
+Less killed 0 equal_killed 0 greater_killed 0
+Transitions explored: 20046
+Total No of times backtrack updated 80
+Single_update_second 11
+update_via_enabled=backtrack 0
+single_update_first 80
+Used time (seconds): 4.830638
+
+Bound 4
+Total number of runs:  92,   killed-in-the-middle runs: 0
+broken_in_middle 0
+Less killed 0 equal_killed 0 greater_killed 0
+Transitions explored: 20046
+Total No of times backtrack updated 80
+Single_update_second 11
+update_via_enabled=backtrack 0
+single_update_first 80
+Used time (seconds): 4.814805

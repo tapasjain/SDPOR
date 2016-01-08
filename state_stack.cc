@@ -75,8 +75,6 @@ State * StateStack::get_mutex_lock_state(State * cur_state, InspectEvent &event)
   return state;
 }
 
-
-
 string  StateStack::toString()
 {
   stringstream ss;
@@ -91,12 +89,14 @@ string  StateStack::toString()
 
 bool StateStack::has_backtrack_points()
 {
+  // cout << "I am here " << endl;
   State * state;
   state = stack_top;
   while (state != NULL){
     if (!state->backtrack.empty()) return true;
     state = state->prev;
   }
+  // cout << "I am here " << endl;
   return false;
 }
 

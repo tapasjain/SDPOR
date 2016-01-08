@@ -36,14 +36,14 @@ public:
   ~Scheduler();
 
   bool init();
-  InspectEvent receive_event( Socket * socket ); 
+  InspectEvent receive_event( Socket * socket );
   InspectEvent receive_main_start();
   void approve_event(InspectEvent &event);
 
-  void run(); 
+  void run();
   void stop();
-  
-  inline bool is_listening_socket(int fd); 
+
+  inline bool is_listening_socket(int fd);
   void print_out_trace();
   pair<int, int> set_read_fds();
 
@@ -93,22 +93,24 @@ public:
   InspectEvent get_latest_executed_event_of_thread(State * state, int thread_id);
 
   void check_race(State * state);
-  
+
   bool found_enough_error() { return (num_of_errors_detected >= max_tolerated_errors); }
 public:
   EventBuffer event_buffer;
   EventGraph  event_graph;
-  
+
 public:
   int max_tolerated_errors;
+  int bound;
+  bool context_bound;
   int num_of_errors_detected;
   int num_of_transitions;
   int num_of_states;
   int num_of_truncated_branches;
   int num_killed;
-  int sut_pid;  
+  int sut_pid;
   int run_counter;
-  bool found_bug; 
+  bool found_bug;
   StateStack state_stack;
 };
 

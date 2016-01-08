@@ -2,7 +2,7 @@
 #include "scheduler.hh"
 #include "scheduler_setting.hh"
 #include <cstdlib>
-#include <cstring> 
+#include <cstring>
 #include <iostream>
 #include <sys/time.h>
 
@@ -21,11 +21,11 @@ int verboseLevel = -1;
 void print_usage()
 {
   cout<<"Inspect version 0.0.3 (c) University of Utah                                 \n"
-      <<"                                                                             \n" 
+      <<"                                                                             \n"
       <<"Usage:  inspect [options] test_target                                        \n"
       <<"                                                                             \n"
-      <<"Options:                                                                     \n" 
-      <<"  --timeout            the maxium seconds that Inspect waits for a monitored \n"  
+      <<"Options:                                                                     \n"
+      <<"  --timeout            the maxium seconds that Inspect waits for a monitored \n"
       <<"                       thread to response                                    \n"
       <<"  --multi-error(-me)   do not stop after revealing the first error           \n"
       <<"  --verbose (or -v)    set the verbosity level                               \n"
@@ -50,12 +50,12 @@ enum InspectBehavior
 bool parsing_command_line(int argc, char* argv[])
 {
   if (argc < 2){   print_usage();    exit(0);  }
-  
+
   int pos = 1;
   char * arg, * arg1;
   while (pos < argc){
     arg = argv[pos];
-    
+
     if (strcmp(arg, "--standalone") == 0){
       setting.standalone_flag = true;
       pos++;
@@ -78,7 +78,7 @@ bool parsing_command_line(int argc, char* argv[])
     }
     else if (strcmp(arg, "--max-errors") == 0 || strcmp(arg, "-me")== 0){
       pos++;
-      if (pos == argc){ print_usage(); exit(0); } 
+      if (pos == argc){ print_usage(); exit(0); }
       if(isdigit(argv[pos][0])){
 	setting.max_errors = atoi(argv[pos]);
 	pos++;
@@ -105,8 +105,8 @@ bool parsing_command_line(int argc, char* argv[])
     }
     else if (strcmp(arg, "--verbose") == 0 || strcmp(arg, "-v") == 0){
       pos++;
-      if (pos == argc) { print_usage(); exit(0); } 
-      if (isdigit(argv[pos][0])){	
+      if (pos == argc) { print_usage(); exit(0); }
+      if (isdigit(argv[pos][0])){
 	verboseLevel = atoi(argv[pos]);
 	pos++;
       }
@@ -147,21 +147,29 @@ void print_time(struct timeval * start_time, struct timeval * end_time)
 
 
 int main(int argc, char* argv[])
-{  
+{
 //   int cur_pos;
   bool success_flag;
   SchedulerSetting  setting;
   struct timeval start_time, end_time;
-  
-  success_flag = parsing_command_line(argc, argv);
-  
-  if (! success_flag) return -1;
 
+  success_flag = parsing_command_line(argc, argv);
+
+  if (! success_flag) return -1;
+  bool contextbound; int bound;
+  cout << "ContextBound(1) or SDPOR(0): ";
+  cin >> contextbound;
+
+  if(contextbound) {
+    cout << "Bound : ";
+    cin >> bound;
+  }
 
 
   g_scheduler = new Scheduler();
   g_scheduler->init();
-
+  g_scheduler->bound = bound;
+  g_scheduler->context_bound = contextbound;
   gettimeofday(&start_time, NULL);
   g_scheduler->run();
   gettimeofday(&end_time, NULL);
@@ -180,9 +188,9 @@ int main(int argc, char* argv[])
  *
  * \section install_sec Installation
  *
- * \subsection step1 Step 1: Download the source 
- *  
- * 
+ * \subsection step1 Step 1: Download the source
+ *
+ *
  */
 
 

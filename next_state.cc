@@ -6,6 +6,13 @@
 #include "inspect_exception.hh"
 #include "thread_info.hh"
 
+#include <signal.h>
+#include <netinet/in.h>
+#include <sys/time.h>
+#include <sys/ioctl.h>
+#include <sys/wait.h>
+#include <unistd.h>
+
 using namespace std;
 
 
@@ -41,6 +48,8 @@ void handle_symmetry_event(State *state, InspectEvent &event, EventBuffer &event
  *  (6)  
  * 
  */
+
+
 State * next_state(State* state, 
 		   InspectEvent &event, 
 		   EventBuffer &event_buffer)
@@ -55,17 +64,15 @@ State * next_state(State* state,
   assert( state != NULL );
   assert( event.valid() );  
   assert( state->is_enabled(event) );
-  
-  // state->check_race();
 
   new_state = new State();
-
-  //*new_state = *state;
 
   *(new_state->prog_state) = *(state->prog_state);
   new_state->remove_from_enabled(event);
 
   new_state->sleepset = state->sleepset;
+    
+  new_state->remove_from_sleep = state->remove_from_sleep;
   new_state->locksets = state->locksets;  
   new_state->clock_vectors = state->clock_vectors;
   new_state->update_clock_vector(event.thread_id);  // increase the clock counter of the correspondent thread by 1

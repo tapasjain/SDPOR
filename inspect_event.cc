@@ -73,6 +73,7 @@ void InspectEvent::init()
   cond_id = -1;
   location_id = -1;
   local_state_changed_flag = true;
+  event_toremove = NULL;
 }
 
 void InspectEvent::init_mutex_init(int tid, int mid)
@@ -632,6 +633,13 @@ InspectEvent& InspectEvent::operator =(InspectEvent ev2)
   child_id = ev2.child_id;
   
   local_state_changed_flag = ev2.local_state_changed_flag;
+
+  if(ev2.event_toremove == NULL)
+    event_toremove = NULL;
+  else {
+    event_toremove = new InspectEvent();
+    *event_toremove = *(ev2.event_toremove);
+  }
   
   return *this;
 }

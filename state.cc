@@ -39,6 +39,8 @@ State::State(State &another)
   clock_vectors = another.clock_vectors;
   
   prev = next = NULL;
+
+  remove_from_sleep = another.remove_from_sleep;
 }
 
 
@@ -56,6 +58,8 @@ State & State::operator = (State& another)
   backtrack = another.backtrack;
   done = another.done;
   sleepset = another.sleepset;
+
+  remove_from_sleep = another.remove_from_sleep;
 
   context_switches = another.context_switches;
 

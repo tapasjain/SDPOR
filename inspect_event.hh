@@ -203,6 +203,7 @@ public:
   bool local_state_changed_flag;    // . whether the local state changed after executing the 
                                     //     last global transition
 
+  InspectEvent* event_toremove;
 public:
   static InspectEvent  dummyEvent;
 };
